@@ -8,6 +8,8 @@
 
 #define X_SERVER_CONNECTION_ERROR 0xF0
 
+void printScreenInfo(Screen* screen);
+
 int main(int argc, char** argv) {
 
 	/* 	Open display based on display name.
@@ -33,13 +35,27 @@ int main(int argc, char** argv) {
 
 	// All Xlib macros and functions can be used from here.
 
-	// Print protocol version
+	// X protocol version
 	const int major = ProtocolVersion(display);
 	const int minor = ProtocolRevision(display);
+
+	printf("X Protocol Version %d.%d\n\n", major, minor);
+
+	// X server information
+	const char* vendor	= ServerVendor(display);
+	const int release	= VendorRelease(display);
+
+	printf("Vendor: %s\n", vendor);
+	printf("Release: %d\n", release);
 	
-	printf("X Protocol Version %d.%d\n", major, minor);
-
-
+	// Screen Information
+	const int nscreens = ScreenCount(display);
+	// Iterate over screens in the display and print info
+	for(int i = 0; i < nscreens; i++) {
+		Screen* screen = ScreenOfDisplay(display, i);
+		printScreenInfo(screen);
+	}
+	
 	/*	Close connection to X server for specified display.
 
 		NOTE: Destroys all windows, resource IDs, and other resources created by
@@ -50,4 +66,52 @@ int main(int argc, char** argv) {
 	XCloseDisplay(display);
 
 	return SUCCESS;
+}
+
+void printScreenInfo(Screen* screen) {
+	const int width = WidthOfScreen(screen);
+	const int height = HeightOfScreen(screen);
+	const int widthmm = WidthMMOfScreen(screen);
+	const int heightmm = HeightMMOfScreen(screen);
+
+	const unsigned long black = BlackPixelOfScreen(screen);
+	const unsigned long white = WhitePixelOfScreen(screen);
+
+	const int depth = DefaultDepthOfScreen(screen);
+
+	const int backingStore = DoesBackingStore(screen);
+	const Bool saveUnders = DoesSaveUnders(screen);
+
+	printf("\n====== Screen Information ============\n");
+
+	printf("Dimensions: %dx%d px (%dx%d mm)\n", width, height, widthmm, heightmm);
+	
+	printf("Black Pixel Value: %lx\n", black);
+	printf("White Pixel Value: %lx\n", white);
+	printf("Pixel Depth: %d\n", depth);
+
+	switch(backingStore) {
+		case WhenMapped:
+			printf("Backing Store: When mapped\n");
+			break;
+		case NotUseful:
+			printf("Backing Store: Not useful\n");
+			break;
+		case Always:
+			printf("Backing Store: Always\n");
+			break;
+		default:
+			printf("Backing Store: N/a\n");
+	}
+
+	switch(saveUnders) {
+		case True:
+			printf("Save Unders: True\n");
+			break;
+		case False:
+			printf("Save Unders: False\n");
+			break;
+		default:
+			printf("Save Unders: N/a\n");
+	}
 }
