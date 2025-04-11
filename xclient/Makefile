@@ -1,6 +1,5 @@
 .POSIX:
 .SUFFIXES:
-.PHONY: clean all
 
 CC=clang
 CFLAGS=-Wall -std=c99 -I/usr/local/include
@@ -14,18 +13,18 @@ BIN=xclient
 LIB=-lX11
 
 OBJ=xclient.o
-SRC=$(OBJ: %.o = %.c)
-DEP=$(OBJ: %.o = %.d)
+SRC=$(OBJ:%.o=%.c)
+DEP=$(OBJ:%.o=%.d)
 
 all: $(BIN)
 
 $(BIN): $(OBJ)
-	$(CC) $(CFLAGS) $(LDFLAGS) $(LDLIBS) -o $@ $^
+	$(CC) $(CFLAGS) $(LDFLAGS) $(LIB) $(OBJ) -o $@ 
 
 .SUFFIXES: .c .o
 
 .c.o:
-	$(CC) $(CFLAGS) $(LDFLAGS) $(LDLIBS) -c $<
+	$(CC) $(CFLAGS) -c $<
 
 .SUFFIXES: .c .d
 
@@ -33,9 +32,9 @@ $(BIN): $(OBJ)
 	$(CC) -MM $< -o $@
 
 clean:
-	rm -fr $(DEP)
-	rm -fr $(OBJ)
 	rm -fr $(BIN)
+	rm -fr $(OBJ)
+	rm -fr $(DEP)
 
 # For FreeBSD make use -include
 -include $(DEP)
