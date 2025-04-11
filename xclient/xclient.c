@@ -9,6 +9,7 @@
 #define X_SERVER_CONNECTION_ERROR 0xF0
 
 void printScreenInfo(Screen* screen);
+void printDisplayInfo(Display* display);
 
 int main(int argc, char** argv) {
 
@@ -35,6 +36,21 @@ int main(int argc, char** argv) {
 
 	// All Xlib macros and functions can be used from here.
 
+	// Print info about the display to stdout.
+	printDisplayInfo(display);
+
+	/*	Close connection to X server for specified display.
+
+		NOTE: Destroys all windows, resource IDs, and other resources created by
+		the client (this program), unless specified otherwise by a resource's
+		close-down mode via XSetCloseDownMode.
+	*/
+	XCloseDisplay(display);
+
+	return SUCCESS;
+}
+
+void printDisplayInfo(Display* display) {
 	// X protocol version
 	const int major = ProtocolVersion(display);
 	const int minor = ProtocolRevision(display);
@@ -54,21 +70,12 @@ int main(int argc, char** argv) {
 	for(int i = 0; i < nscreens; i++) {
 		Screen* screen = ScreenOfDisplay(display, i);
 		printScreenInfo(screen);
-	}
-	
-	/*	Close connection to X server for specified display.
-
-		NOTE: Destroys all windows, resource IDs, and other resources created by
-		the client (this program), unless specified otherwise by a resource's
-		close-down mode via XSetCloseDownMode.
-	*/
-
-	XCloseDisplay(display);
-
-	return SUCCESS;
+	}	
 }
 
 void printScreenInfo(Screen* screen) {
+
+	// Return values from the screen struct.
 	const int width = WidthOfScreen(screen);
 	const int height = HeightOfScreen(screen);
 	const int widthmm = WidthMMOfScreen(screen);
@@ -82,6 +89,7 @@ void printScreenInfo(Screen* screen) {
 	const int backingStore = DoesBackingStore(screen);
 	const Bool saveUnders = DoesSaveUnders(screen);
 
+	// Pretty-print them.
 	printf("\n====== Screen Information ============\n");
 
 	printf("Dimensions: %dx%d px (%dx%d mm)\n", width, height, widthmm, heightmm);
