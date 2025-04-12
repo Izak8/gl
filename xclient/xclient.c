@@ -67,7 +67,7 @@ int main(int argc, char** argv) {
 		0, 0, 800, 600, 1, BLACK, WHITE);	
 
 	// Map the window
-	
+	XMapRaised(display, client);
 	
 	// Destroy the window
 	XDestroyWindow(display, client);
