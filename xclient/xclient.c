@@ -12,8 +12,6 @@
 // Return status
 #define XPROTO_ERROR 		0xE1
 #define CONNECTION_ERROR	0xE2
-#define CREATE_WINDOW_ERROR	0xE3
-#define MAP_WINDOW_ERROR	0xE4
 
 
 #define X_ERROR_TEXT_BUFFER_SIZE 255
@@ -50,28 +48,10 @@ int main(int argc, char** argv) {
 
 	// Set a custom error handler.
 	XSetErrorHandler(handler);
-
-	// Get the resource ID of the root window.
-	Window root = DefaultRootWindow(display);
-
-	// Get black and white pixel values for screen.
-	const unsigned long BLACK = BlackPixel(display, DefaultScreen(display));
-	const unsigned long WHITE = WhitePixel(display, DefaultScreen(display));
 	
 	// Print info about the display to stdout.
 	printDisplayInfo(display);
 
-	// Create an simple unmapped top-level window (subwindow of root).
-	// The custom error handler will act on protocol errors.
-	Window client = XCreateSimpleWindow(display, root,
-		0, 0, 800, 600, 1, BLACK, WHITE);	
-
-	// Map the window
-	XMapRaised(display, client);
-	
-	// Destroy the window
-	XDestroyWindow(display, client);
-	
 	/*	Close connection to X server for specified display.
 
 		NOTE: Destroys all windows, resource IDs, and other resources created by
@@ -94,17 +74,7 @@ int handler(Display* display, XErrorEvent* error) {
 	// Print error description to stderr.
 	fprintf(stderr, "Error: %s\n", outputBuffer);
 
-	// Switch on request opcode to determine program return value.
-	switch(error->request_code) {
-		case X_CreateWindow:
-			exit(CREATE_WINDOW_ERROR);
-			break;
-		case X_MapWindow:
-			exit(MAP_WINDOW_ERROR);
-			break;
-		default:
-			exit(XPROTO_ERROR);
-	}
+	exit(XPROTO_ERROR);
 }
 
 void printDisplayInfo(Display* display) {
