@@ -1,15 +1,25 @@
 #include <stdio.h>
+#include <stdlib.h>
 
 #include <X11/Xlib.h>
+// Include Xproto to get opcode defines for error handling
+#include <X11/Xproto.h>
 
 // Basic macros
 #define SUCCESS 0
 #define FAILURE 1
 
-#define X_SERVER_CONNECTION_ERROR 0xF0
+// Return status
+#define XPROTO_ERROR 		0xE1
+#define CONNECTION_ERROR	0xE2
+#define CREATE_WINDOW_ERROR	0xE3
+
+#define X_ERROR_TEXT_BUFFER_SIZE 255
 
 void printScreenInfo(Screen* screen);
 void printDisplayInfo(Display* display);
+
+int handler(Display* display, XErrorEvent* error);
 
 int main(int argc, char** argv) {
 
@@ -18,27 +28,46 @@ int main(int argc, char** argv) {
 		NOTE: NULL defaults to DISPLAY environment variable on POSIX systems.
 
 		Returns a pointer to a Display structure which represents the connection
-		to the X server through either TCP, DECnet (what?), or some local IPC.
-		
+		to the X server through either TCP, DECnet (what?),or some local IPC
+		mechanism.
+
 		If the connection fails then XOpenDisplay returns NULL.
 	*/
 
 	// Get a pointer to display (X server connection state)
 	Display* display;
 
-	// Handle failure to open a connection	
+	// Handle failure to open a connection.
 	if((display = XOpenDisplay(NULL)) == NULL) {
 		fprintf(stderr,
 			"Error: Connection to X server failed.\n");
-			
-		return X_SERVER_CONNECTION_ERROR;
+		return CONNECTION_ERROR;
 	}
 
 	// All Xlib macros and functions can be used from here.
 
+	// Set a custom error handler.
+	XSetErrorHandler(handler);
+
+	// Get the resource ID of the root window.
+	Window root = DefaultRootWindow(display);
+
+	// Get black and white pixel values for screen.
+	const unsigned long BLACK = BlackPixel(display, DefaultScreen(display));
+	const unsigned long WHITE = WhitePixel(display, DefaultScreen(display));
+	
 	// Print info about the display to stdout.
 	printDisplayInfo(display);
 
+	// Create an simple unmapped top-level window (subwindow of root).
+	// The custom error handler will act on protocol errors.
+	Window client = XCreateSimpleWindow(display, root,
+		0, 0, 800, 600, 1, BLACK, WHITE);	
+
+	
+	// Destroy the window
+	XDestroyWindow(display, client);
+	
 	/*	Close connection to X server for specified display.
 
 		NOTE: Destroys all windows, resource IDs, and other resources created by
@@ -48,6 +77,27 @@ int main(int argc, char** argv) {
 	XCloseDisplay(display);
 
 	return SUCCESS;
+}
+
+int handler(Display* display, XErrorEvent* error) {
+	// Set an output buffer of a static size.
+	char outputBuffer[X_ERROR_TEXT_BUFFER_SIZE];
+
+	// Store error text description into buffer.
+	XGetErrorText(display, error->error_code,
+		outputBuffer, X_ERROR_TEXT_BUFFER_SIZE);
+
+	// Print error description to stderr.
+	fprintf(stderr, "Error: %s\n", outputBuffer);
+
+	// Switch on request opcode to determine program return value.
+	switch(error->request_code) {
+		case X_CreateWindow:
+			exit(CREATE_WINDOW_ERROR);
+			break;
+		default:
+			exit(XPROTO_ERROR);
+	}
 }
 
 void printDisplayInfo(Display* display) {
