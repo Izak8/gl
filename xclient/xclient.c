@@ -13,6 +13,8 @@
 #define XPROTO_ERROR 		0xE1
 #define CONNECTION_ERROR	0xE2
 #define CREATE_WINDOW_ERROR	0xE3
+#define MAP_WINDOW_ERROR	0xE4
+
 
 #define X_ERROR_TEXT_BUFFER_SIZE 255
 
@@ -64,6 +66,8 @@ int main(int argc, char** argv) {
 	Window client = XCreateSimpleWindow(display, root,
 		0, 0, 800, 600, 1, BLACK, WHITE);	
 
+	// Map the window
+	
 	
 	// Destroy the window
 	XDestroyWindow(display, client);
@@ -94,6 +98,9 @@ int handler(Display* display, XErrorEvent* error) {
 	switch(error->request_code) {
 		case X_CreateWindow:
 			exit(CREATE_WINDOW_ERROR);
+			break;
+		case X_MapWindow:
+			exit(MAP_WINDOW_ERROR);
 			break;
 		default:
 			exit(XPROTO_ERROR);
