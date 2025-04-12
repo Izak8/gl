@@ -3,7 +3,54 @@ This project is an attempt to learn the basics of the X11 window system and the 
 
 # OVERVIEW
 
-## Important Terminology (See Glossary in Xlib.pdf)
+## Basic Client Behaviour
+
+### Events
+Client programs are informed of events. Events may be generated via a request from the
+client, or asynchronously (Like keyboard or mouse input). Other clients can send events
+to a given client. 
+
+Clients must ask to be informed of certain types of events. A client must be prepared to
+handle events.
+
+Input events are recieved asynchronously from the X server and are stored in a queue
+until they are requested by an explicit call by the client (e.g. XNextEvent,
+XWindowEvent).
+
+Some calls to library functiosn can generate Expose and ConfigureRequest events which
+also arrive asynchronously. A client can wait for these events by a call to XSync after
+calling a function which causes the server to generate events.
+
+
+### Creating a Client
+A basic X client must open a connection to the X server via a call to XOpenDisplay.
+From this point Xlib macros and functions can be called.
+
+
+### Window Creation Without Toolkits
+A top-level window being created directly using Xlib must follow a set of rules to allow
+applications to interact in a reasonable way across different styles of window
+management. (See Xlib - C Language X Interface, Section 3.3)
+
+- Never fight with the window manager for the size or placement of a top-level
+window.
+
+- You must be able to deal with whatever size window is given. In the case of a window
+which is too small, the application must handle this (A message could be sent to stdout).
+
+- Top-level windows should only resize or move in direct response to user input.
+
+- Top-level windows created without a toolkit that sets standard window properties
+automatically should set these properties manually before mapping.
+
+(See Xlib - C Language X Interface, Chapter 14 for information on ICCCM)
+
+XCreateWindow creates a window with specific attributes. XCreateSimpleWindow creates a
+window which inherits its attributes from it's parent window.
+
+
+
+## Important Terminology (See Xlib - C Language X Interface, Glossary)
 
 ### Client
 An application program that connects to the window system server via some IPC path.
@@ -79,6 +126,8 @@ Children of the same parent window are known as sibling windows.
 Each screen has a root window covering it. The root window cannot be reconfigured or un-
 mapped, but otherwise it acts as a full-fledged window. A root window has no parent.
 
+### Top-level windows
+Direct children of the root window. Most likely to be an application.
 
 
 ### Reply
