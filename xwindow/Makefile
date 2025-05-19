@@ -1,31 +1,26 @@
 .POSIX:
 .SUFFIXES:
 
-CC=clang
-CFLAGS=-Wall -std=c99
-
-# Include and Library paths
-LDFLAGS=-L/usr/local/lib
+CC=cc
+CFLAGS	= -I/usr/local/include -D_THREAD_SAFE -pthread -Wall -std=c99
+LDFLAGS	= -L/usr/local/lib -lX11
 
 BIN=xwindow
-
-# Link with libX11.so
-LIB=-lX11
-INC=-I/usr/local/include
-
 OBJ=xwindow.o
 SRC=$(OBJ:%.o=%.c)
 DEP=$(OBJ:%.o=%.d)
 
-all: $(BIN) compile_flags.txt
+all: $(BIN) compile_flags
 
+# Build binary from objects
 $(BIN): $(OBJ)
-	$(CC) $(CFLAGS) $(INC) $(LDFLAGS) $(LIB) $(OBJ) -o $@ 
+	$(CC) $(CFLAGS) -o $@ $(OBJ) $(LDFLAGS)
 
 # clangd compile_flags.txt
-compile_flags.txt:
-	echo "$(LDFLAGS) $(CFLAGS) $(INC)" | tr ' ' '\n' > $@
+compile_flags:
+	echo "$(LDFLAGS) $(CFLAGS)" | tr ' ' '\n' > $@.txt
 
+# Suffix rules to create .o and .d files from sources
 .SUFFIXES: .c .o
 .c.o:
 	$(CC) $(CFLAGS) $(INC) -c $<
@@ -34,10 +29,11 @@ compile_flags.txt:
 .c.d:
 	$(CC) $(INC) -MM $< -o $@
 
+
 clean:
 	rm -fr $(BIN)
 	rm -fr $(OBJ)
 	rm -fr $(DEP)
-
+	
 # For FreeBSD make use -include
 -include $(DEP)
