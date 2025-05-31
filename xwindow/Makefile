@@ -1,16 +1,24 @@
 .POSIX:
 .SUFFIXES:
 
-CC=cc
-CFLAGS	= -I/usr/local/include -D_THREAD_SAFE -pthread -Wall -std=c99
-LDFLAGS	= -L/usr/local/lib -lX11
+CC		= cc
+CFLAGS	= -Wall -std=c99
 
+PC		= pkg-config
+
+# Project Files
 BIN=xwindow
 OBJ=xwindow.o
 SRC=$(OBJ:%.o=%.c)
 DEP=$(OBJ:%.o=%.d)
 
-all: $(BIN) compile_flags
+# Libraries
+LIB=x11
+
+CFLAGS	+= `$(PC) --cflags $(LIB)`
+LDFLAGS	 = `$(PC) --libs $(LIB)`
+
+all: $(BIN)
 
 # Build binary from objects
 $(BIN): $(OBJ)
@@ -27,8 +35,7 @@ compile_flags:
 
 .SUFFIXES: .c .d
 .c.d:
-	$(CC) $(INC) -MM $< -o $@
-
+	$(CC) -MM $< -o $@
 
 clean:
 	rm -fr $(BIN)
